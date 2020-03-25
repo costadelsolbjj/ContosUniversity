@@ -22,7 +22,7 @@ namespace ContosoUniversity.Data
         {
             var enrollment = await Context.Enrollments
             .Include(s => s.Course)
-           .ThenInclude(e => e.Credits)
+           .Include(e => e.Student)
             .AsNoTracking()
             .FirstOrDefaultAsync(m => m.Id == id);
             return enrollment;
