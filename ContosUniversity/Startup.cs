@@ -26,6 +26,7 @@ namespace ContosoUniversity
        options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
             services.AddScoped(typeof(IAsyncRepository<>), typeof(EfRepository<>));
             services.AddScoped<IStudentRepository, StudentRepository>();
+            services.AddScoped<IEnrollmentRepository, EnrollmentRepository>();
             services.AddMvc();
             services.AddControllersWithViews();
         }

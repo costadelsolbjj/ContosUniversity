@@ -1,6 +1,7 @@
 ﻿using ContosoUniversity.InFrastructure;
 using ContosoUniversity.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace ContosoUniversity.Data
@@ -28,6 +29,16 @@ namespace ContosoUniversity.Data
             return enrollment;
         }
 
+
+        public async Task<List<Enrollment>> GetEnrollmentAllAsync()
+        {
+            var enrollments = await Context.Enrollments
+            .Include(s => s.Course)
+           .Include(e => e.Student)
+            .AsNoTracking()
+            .ToListAsync();
+            return enrollments;
+        }
 
 
     }

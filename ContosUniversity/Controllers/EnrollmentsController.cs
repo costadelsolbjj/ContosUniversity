@@ -7,37 +7,37 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using ContosoUniversity.Data;
 using ContosoUniversity.Models;
+using ContosoUniversity.InFrastructure;
 
 namespace ContosoUniversity.Web.Controllers
 {
     public class EnrollmentsController : Controller
     {
         private readonly IEnrollmentRepository _enrollmentRepository;
+        private readonly IStudentRepository _studentRepository;
+        private readonly ICourseRepository _courseRepository;
 
-        public EnrollmentsController(IEnrollmentRepository enrollmentRepository)
+        public EnrollmentsController(IEnrollmentRepository enrollmentRepository, IStudentRepository studentRepository, ICourseRepository courseRepository)
         {
             _enrollmentRepository = enrollmentRepository;
+            _studentRepository = studentRepository;
+            _courseRepository =courseRepository;
         }
 
         // GET: Enrollments
         public async Task<IActionResult> Index()
         {
-            var enrollmentRepository = _enrollmentRepository.Enrollments.Include(e => e.Course).Include(e => e.Student);
-            return View(await enrollmentRepository.ToListAsync());
+            var enrollments = await _enrollmentRepository.GetEnrollmentAllAsync();
+            return View(enrollments);
         }
 
         // GET: Enrollments/Details/5
-        public async Task<IActionResult> Details(int? id)
+        public async Task<IActionResult> Details(int id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+          
 
-            var enrollment = await _enrollmentRepository.Enrollments
-                .Include(e => e.Course)
-                .Include(e => e.Student)
-                .FirstOrDefaultAsync(m => m.EnrollmentID == id);
+            var enrollment = await _enrollmentRepository.GetEnrollmentDetailsAsync(id);
+
             if (enrollment == null)
             {
                 return NotFound();
@@ -49,8 +49,12 @@ namespace ContosoUniversity.Web.Controllers
         // GET: Enrollments/Create
         public IActionResult Create()
         {
-            ViewData["CourseID"] = new SelectList(_enrollmentRepository.Courses, "Id", "Id");
-            ViewData["StudentID"] = new SelectList(_enrollmentRepository.Students, "Id", "Id");
+
+            var students =  _studentRepository.GetAll().Result;
+            var courses = _courseRepository.GetAll().Result;
+
+            ViewData["CourseID"] = new SelectList(courses, "Id", "Id");
+            ViewData["StudentID"] = new SelectList(students, "Id", "Id");
             return View();
         }
 
@@ -63,30 +67,35 @@ namespace ContosoUniversity.Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                _enrollmentRepository.Add(enrollment);
-                await _enrollmentRepository.SaveChangesAsync();
+                await _enrollmentRepository.Add(enrollment);
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["CourseID"] = new SelectList(_enrollmentRepository.Courses, "Id", "Id", enrollment.CourseID);
-            ViewData["StudentID"] = new SelectList(_enrollmentRepository.Students, "Id", "Id", enrollment.StudentID);
+            var students = _studentRepository.GetAll().Result;
+            var courses = _courseRepository.GetAll().Result;
+
+            ViewData["CourseID"] = new SelectList(courses, "Id", "Id");
+            ViewData["StudentID"] = new SelectList(students, "Id", "Id");
             return View(enrollment);
         }
 
         // GET: Enrollments/Edit/5
-        public async Task<IActionResult> Edit(int? id)
+        public async Task<IActionResult> Edit(int id)
         {
             if (id == null)
             {
                 return NotFound();
             }
 
-            var enrollment = await _enrollmentRepository.Enrollments.FindAsync(id);
+            var enrollment = await _enrollmentRepository.GetEnrollmentDetailsAsync(id);
             if (enrollment == null)
             {
                 return NotFound();
             }
-            ViewData["CourseID"] = new SelectList(_enrollmentRepository.Courses, "Id", "Id", enrollment.CourseID);
-            ViewData["StudentID"] = new SelectList(_enrollmentRepository.Students, "Id", "Id", enrollment.StudentID);
+            var students = _studentRepository.GetAll().Result;
+            var courses = _courseRepository.GetAll().Result;
+
+            ViewData["CourseID"] = new SelectList(courses, "Id", "Id");
+            ViewData["StudentID"] = new SelectList(students, "Id", "Id");
             return View(enrollment);
         }
 
@@ -97,7 +106,7 @@ namespace ContosoUniversity.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("EnrollmentID,CourseID,StudentID,Grade")] Enrollment enrollment)
         {
-            if (id != enrollment.EnrollmentID)
+            if (id != enrollment.Id)
             {
                 return NotFound();
             }
@@ -106,12 +115,11 @@ namespace ContosoUniversity.Web.Controllers
             {
                 try
                 {
-                    _enrollmentRepository.Update(enrollment);
-                    await _enrollmentRepository.SaveChangesAsync();
+                    await _enrollmentRepository.Update(enrollment);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!EnrollmentExists(enrollment.EnrollmentID))
+                    if (!EnrollmentExists(enrollment.Id))
                     {
                         return NotFound();
                     }
@@ -122,23 +130,20 @@ namespace ContosoUniversity.Web.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["CourseID"] = new SelectList(_enrollmentRepository.Courses, "Id", "Id", enrollment.CourseID);
-            ViewData["StudentID"] = new SelectList(_enrollmentRepository.Students, "Id", "Id", enrollment.StudentID);
+            var students = _studentRepository.GetAll().Result;
+            var courses = _courseRepository.GetAll().Result;
+
+            ViewData["CourseID"] = new SelectList(courses, "Id", "Id");
+            ViewData["StudentID"] = new SelectList(students, "Id", "Id");
             return View(enrollment);
         }
 
         // GET: Enrollments/Delete/5
-        public async Task<IActionResult> Delete(int? id)
+        public async Task<IActionResult> Delete(int id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+           
 
-            var enrollment = await _enrollmentRepository.Enrollments
-                .Include(e => e.Course)
-                .Include(e => e.Student)
-                .FirstOrDefaultAsync(m => m.EnrollmentID == id);
+            var enrollment = await _enrollmentRepository.GetEnrollmentDetailsAsync(id);
             if (enrollment == null)
             {
                 return NotFound();
@@ -152,15 +157,15 @@ namespace ContosoUniversity.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var enrollment = await _enrollmentRepository.Enrollments.FindAsync(id);
-            _enrollmentRepository.Enrollments.Remove(enrollment);
-            await _enrollmentRepository.SaveChangesAsync();
+            var enrollment = await _enrollmentRepository.GetEnrollmentDetailsAsync(id);
+            await _enrollmentRepository.Remove(enrollment);
             return RedirectToAction(nameof(Index));
         }
 
         private bool EnrollmentExists(int id)
         {
-            return _enrollmentRepository.Enrollments.Any(e => e.EnrollmentID == id);
+             var enrollment=_enrollmentRepository.GetEnrollmentDetailsAsync(id);
+             return enrollment == null ? true : false;
         }
     }
 }
