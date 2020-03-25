@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using ContosoUniversity.Infrastructure;
 using ContosoUniversity.Models;
+using ContosoUniversity.InFrastructure;
 
 namespace ContosoUniversity.WebApi.Controllers
 {
@@ -11,9 +12,9 @@ namespace ContosoUniversity.WebApi.Controllers
     [ApiController]
     public class CoursesController : ControllerBase
     {
-        private readonly IAsyncRepository<Course> _courseRepository;
+        private readonly ICourseRepository _courseRepository;
 
-        public CoursesController(IAsyncRepository<Course> courseRepository)
+        public CoursesController(ICourseRepository courseRepository)
         {
             _courseRepository = courseRepository;
         }

@@ -27,6 +27,7 @@ namespace ContosoUniversity
             services.AddScoped(typeof(IAsyncRepository<>), typeof(EfRepository<>));
             services.AddScoped<IStudentRepository, StudentRepository>();
             services.AddScoped<IEnrollmentRepository, EnrollmentRepository>();
+            services.AddScoped<ICourseRepository, CourseRepository>();
             services.AddMvc();
             services.AddControllersWithViews();
         }
