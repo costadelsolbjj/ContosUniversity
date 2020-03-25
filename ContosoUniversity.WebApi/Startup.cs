@@ -31,6 +31,7 @@ namespace ContosoUniversity.WebApi
                      options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
             services.AddScoped(typeof(IAsyncRepository<>), typeof(EfRepository<>));
             services.AddScoped<IStudentRepository, StudentRepository>();
+            services.AddScoped<ICourseRepository, CourseRepository>();
             services.AddControllers();
         }
 
