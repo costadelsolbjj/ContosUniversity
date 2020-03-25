@@ -21,8 +21,8 @@ namespace ContosoUniversity.Data
         public async Task<Enrollment> GetEnrollmentDetailsAsync(int id)
         {
             var enrollment = await Context.Enrollments
-            .Include(s => s.Enrollment)
-           .ThenInclude(e => e.Course)
+            .Include(s => s.Course)
+           .ThenInclude(e => e.Credits)
             .AsNoTracking()
             .FirstOrDefaultAsync(m => m.Id == id);
             return enrollment;
